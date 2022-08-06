@@ -14,7 +14,7 @@ namespace Tarodev
         public bool Activated;
         [Header("REFERENCES")]
         [SerializeField] private GameObject _target;
-      //  [SerializeField] private GameObject _explosionPrefab;
+        [SerializeField] private GameObject _explosionPrefab;
 
         [Header("MOVEMENT")]
         [SerializeField] private float _maxSpeed = 15;
@@ -78,7 +78,7 @@ namespace Tarodev
 
         private void OnCollisionEnter(Collision collision)
         {
-        // if (_explosionPrefab) Instantiate(_explosionPrefab, transform.position, Quaternion.identity);
+          if (_explosionPrefab) Instantiate(_explosionPrefab, transform.position, Quaternion.identity);
           //  if (collision.transform.TryGetComponent<IExplode>(out var ex)) ex.Explode();
 
             Destroy(gameObject);
