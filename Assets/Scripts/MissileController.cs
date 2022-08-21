@@ -1,8 +1,4 @@
-using System;
 using UnityEngine;
-
-namespace Tarodev
-{
 
     public class MissileController : MonoBehaviour
     {
@@ -10,10 +6,11 @@ namespace Tarodev
         private Rigidbody _rb;
         public bool Activated;
         [Header("REFERENCES")]
-        [SerializeField] private GameObject _target;
+        [SerializeField] public GameObject _target;
         [SerializeField] private GameObject _explosionPrefab;
+        [SerializeField] private GameObject _smokePrefab;
 
-        [Header("MOVEMENT")]
+    [Header("MOVEMENT")]
         [SerializeField] private float _maxSpeed = 15;
         [SerializeField] private float _rotateSpeed = 95;
         [SerializeField] private float _accelerationSpeed = 0.0035f;
@@ -32,6 +29,9 @@ namespace Tarodev
         private void Start()
         {
             _rb = GetComponent<Rigidbody>();
+            Random.InitState(System.DateTime.Now.Millisecond);
+            _deviationAmount = Random.Range(20, 50);
+            _deviationSpeed = Random.Range(10, 20);
         }
         private void FixedUpdate()
         {
@@ -41,6 +41,7 @@ namespace Tarodev
                float _speed2 = Mathf.Lerp(0, _maxSpeed, LerpAcceleration);
                 _rb.velocity = transform.forward * _speed2;
                 var leadTimePercentage = Mathf.InverseLerp(_minDistancePredict, _maxDistancePredict, Vector3.Distance(transform.position, _target.transform.position));
+                _smokePrefab.SetActive(true);
 
                 PredictMovement(leadTimePercentage);
 
@@ -51,9 +52,8 @@ namespace Tarodev
         }
         private void PredictMovement(float leadTimePercentage)
         {
-            var predictionTime = Mathf.Lerp(0, _maxTimePrediction, leadTimePercentage);
-
-            _standardPrediction = _target.GetComponent<Rigidbody>().position + _target.GetComponent<Rigidbody>().velocity * predictionTime;
+        var predictionTime = Mathf.Lerp(0, _maxTimePrediction, leadTimePercentage);
+        _standardPrediction = _target.GetComponent<Rigidbody>().position + _target.GetComponent<Rigidbody>().velocity * predictionTime;
         }
 
         private void AddDeviation(float leadTimePercentage)
@@ -76,8 +76,9 @@ namespace Tarodev
         private void OnCollisionEnter(Collision collision)
         {
           if (_explosionPrefab) Instantiate(_explosionPrefab, transform.position, Quaternion.identity);
-          //  if (collision.transform.TryGetComponent<IExplode>(out var ex)) ex.Explode();
-
+            Debug.Log("Explosion");
+        //  if (collision.transform.TryGetComponent<IExplode>(out var ex)) ex.Explode();
+        _smokePrefab.transform.parent = null;
             Destroy(gameObject);
         }
 
@@ -89,4 +90,3 @@ namespace Tarodev
             Gizmos.DrawLine(_standardPrediction, _deviatedPrediction);
         }
     }
-}

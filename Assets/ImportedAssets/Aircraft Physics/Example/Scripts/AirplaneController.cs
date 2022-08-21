@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class AirplaneController : MonoBehaviour
 {
+    public GameObject target;
     [SerializeField]
     List<AeroSurface> controlSurfaces = null;
     [SerializeField]
@@ -26,6 +28,15 @@ public class AirplaneController : MonoBehaviour
     [SerializeField]
     Text displayText = null;
 
+    [Header("Missile holders")]
+    [SerializeField] private FixedJoint HolderOne;
+    [SerializeField] private FixedJoint HolderTwo;
+    [SerializeField] private Transform LocationOne;
+    [SerializeField] private Transform LocationTwo;
+
+    [Header("Missiles")]
+    [SerializeField] private GameObject AGM;
+
     float thrustPercent;
     float brakesTorque;
 
@@ -40,6 +51,18 @@ public class AirplaneController : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            StartCoroutine(SendFirstRocket());
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            StartCoroutine(SendSecondRocket());
+        }
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            RestockRockes();
+        }
         Pitch = Input.GetAxis("Vertical");
         Roll = Input.GetAxis("Horizontal");
         Yaw = Input.GetAxis("Yaw");
@@ -59,7 +82,7 @@ public class AirplaneController : MonoBehaviour
             brakesTorque = brakesTorque > 0 ? 0 : 100f;
         }
 
-     //   displayText.text =  "V: " + ((int)rb.velocity.magnitude).ToString("D3") + " m/s\n";
+      //  displayText.text =  "V: " + ((int)rb.velocity.magnitude).ToString("D3") + " m/s\n";
       //  displayText.text += "A: " + ((int)transform.position.y).ToString("D4") + " m\n";
       //  displayText.text += "T: " + (int)(thrustPercent * 100) + "%\n";
       //  displayText.text += brakesTorque > 0 ? "B: ON" : "B: OFF";
@@ -98,6 +121,36 @@ public class AirplaneController : MonoBehaviour
                     break;
             }
         }
+    }
+    public void RestockRockes()
+    {
+        Vector3 spawnPoint = LocationOne.position;
+        Vector3 spawnPoint2 = LocationTwo.position;
+        HolderOne = gameObject.AddComponent<FixedJoint>();
+        HolderTwo = gameObject.AddComponent<FixedJoint>();
+        HolderOne.connectedBody = Instantiate(AGM, LocationOne.position, LocationOne.rotation).GetComponent<Rigidbody>();
+        HolderTwo.connectedBody = Instantiate(AGM, LocationTwo.position, LocationTwo.rotation).GetComponent<Rigidbody>();
+        HolderOne.connectedBody.GetComponent<MissileController>()._target = target;
+        HolderTwo.connectedBody.GetComponent<MissileController>()._target = target;
+        HolderOne.connectedBody.GetComponent<MissileController>().Activated = false;
+        HolderTwo.connectedBody.GetComponent<MissileController>().Activated = false;
+
+    }
+    IEnumerator SendFirstRocket()
+    {
+        MissileController missileOne = HolderOne.connectedBody.GetComponent<MissileController>();
+        Destroy(HolderOne);
+        yield return new WaitForSeconds(1f);
+        missileOne.Activated = true;
+        yield return null;
+    }
+    IEnumerator SendSecondRocket()
+    {
+        MissileController missileTwo = HolderTwo.connectedBody.GetComponent<MissileController>();
+        Destroy(HolderTwo);
+        yield return new WaitForSeconds(1f);
+        missileTwo.Activated = true;
+        yield return null;
     }
 
     private void OnDrawGizmos()
